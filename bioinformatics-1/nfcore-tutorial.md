@@ -42,7 +42,7 @@ nextflow run nf-core/sarek \
 - `--outdir`: Çıktı klasörü
 - `-profile`: `docker`, `singularity` veya `conda`
 
-## 📂 2b) YAML Konfigürasyon ile Çalıştırma
+### 📂 2b) YAML Konfigürasyon ile Çalıştırma
 
 Eğer `sarek_run.yaml` gibi bir config dosyası hazırladıysanız, parametreleri komut satırında vermek yerine bu dosyayı kullanabilirsiniz:
 
