@@ -1,0 +1,105 @@
+# Snakefile Tutorial: Structure and Usage
+# -------------------------------------
+# 1) Define the `all` rule to list final targets of the workflow.
+# 2) Each rule must have:
+#    - A unique name (`rule <name>:`)
+#    - `input:` files/channels that the rule consumes
+#    - `output:` files that the rule produces
+#    - One of `shell:`, `script:`, or `run:` to perform processing
+# 3) Snakemake automatically builds a DAG based on file dependencies and executes jobs in order.
+# 
+# Below is an example combining simple text processing, alignment, variant calling, and data download.
+
+rule all:
+    input:
+        # Simple text processing outputs
+        expand("results/{sample}.count", sample=["sample1","sample2"]),
+        expand("results/{sample}.upper.txt", sample=["sample1","sample2"]),
+        # Alignment outputs
+        expand("alignments/{sample}.sorted.bam", sample=["sample1","sample2"]),
+        # Variant calling outputs
+        expand("variants/{sample}.vcf", sample=["sample1","sample2"]),
+        # Example FASTQ download and read count
+        "sample/SRR000001.fastq.gz",
+        "sample/SRR000001.fastq",
+        "results/SRR000001.seq.count"
+
+rule count_lines:
+    input:
+        "sample/{sample}.txt"
+    output:
+        "results/{sample}.count"
+    shell:
+        "wc -l {input} > {output}"
+
+rule uppercase:
+    input:
+        "sample/{sample}.txt"
+    output:
+        "results/{sample}.upper.txt"
+    script:
+        "scripts/uppercase.py"
+
+# Mapping reads to reference
+rule map_reads:
+    input:
+        reads="sample/{sample}.txt",
+        ref="data/ref.fa"
+    output:
+        bam="alignments/{sample}.bam"
+    shell:
+        "bwa mem {input.ref} {input.reads} | samtools view -Sb - > {output.bam}"
+
+# Sort BAM files
+rule sort_bam:
+    input:
+        bam="alignments/{sample}.bam"
+    output:
+        sorted_bam="alignments/{sample}.sorted.bam"
+    shell:
+        "samtools sort {input.bam} -o {output.sorted_bam}"
+
+# Index sorted BAM
+rule index_bam:
+    input:
+        sorted_bam="alignments/{sample}.sorted.bam"
+    output:
+        bai="alignments/{sample}.sorted.bam.bai"
+    shell:
+        "samtools index {input.sorted_bam}"
+
+# Variant calling
+rule call_variants:
+    input:
+        bam="alignments/{sample}.sorted.bam",
+        bai="alignments/{sample}.sorted.bam.bai",
+        ref="data/ref.fa"
+    output:
+        vcf="variants/{sample}.vcf"
+    shell:
+        "bcftools mpileup -f {input.ref} {input.bam} | bcftools call -mv -Ov -o {output.vcf}"
+
+# Fetch example FASTQ file from ENA
+rule download_reads:
+    output:
+        "sample/SRR000001.fastq.gz"
+    shell:
+        "wget -O {output} ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR000/000/SRR000001/SRR000001.fastq.gz"
+
+# Unzip FASTQ file
+rule unzip_reads:
+    input:
+        "sample/SRR000001.fastq.gz"
+    output:
+        "sample/SRR000001.fastq"
+    shell:
+        "gunzip -c {input} > {output}"
+
+# Count sequences in FASTQ
+rule count_sequences:
+    input:
+        "sample/SRR000001.fastq"
+    output:
+        "results/SRR000001.seq.count"
+    shell:
+        "grep -c '^@' {input} > {output}" 

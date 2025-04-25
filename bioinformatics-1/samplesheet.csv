@@ -1,0 +1,4 @@
+# Sarek samplesheet example
+sample,fastq_1,fastq_2,sex
+s1,/path/to/sample1_R1.fastq.gz,/path/to/sample1_R2.fastq.gz,male
+s2,/path/to/sample2_R1.fastq.gz,/path/to/sample2_R2.fastq.gz,female 

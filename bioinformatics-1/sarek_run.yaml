@@ -1,0 +1,18 @@
+profile: docker
+input: '/absolute/path/to/data'
+genome: GRCh38
+dirnamer:
+  run: 'sarek_run'
+max_cpus: 8
+max_memory: '16.GB'
+params:
+  samplesheet: 'samplesheet.csv'
+containers:
+  enabled: true
+  cache_dir: '~/nfcore_cache'
+resources:
+  queue: 'default'
+  account: 'project_account'
+
+# Usage:
+# nextflow run nf-core/sarek -r 3.5.1 --config sarek_run.yaml 
